@@ -1,5 +1,5 @@
 # main.py
-from fastapi import FastAPI, Query, BackgroundTasks
+from fastapi import FastAPI, Query, Request, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import asyncio
@@ -30,28 +30,41 @@ app = FastAPI()
 is_polling = False
 is_classifying = False
 
-
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+app.mount("/", StaticFiles(directory="frontend/build", html=True), name="frontend")
+
 @app.on_event("startup")
 async def startup_event():
     init_db()  # Ensure the DB is set up on startup
+
+@app.options("/reset_classifications")
+async def options_handler():
+    return {"status": "OK"}
 
 @app.get("/reset_classifications")
 async def reset_classifications_route():
     reset_classifications()
     return {"message": "Classifications reset."}
 
+@app.options("/polling_status")
+async def options_handler():
+    return {"status": "OK"}
+
 @app.get("/polling_status")
 async def polling_status():
     return {"is_polling": is_polling, "is_classifying": is_classifying}
+
+@app.options("/start_polling")
+async def options_handler():
+    return {"status": "OK"}
 
 @app.get("/start_polling")
 async def start_polling():
@@ -61,12 +74,19 @@ async def start_polling():
         asyncio.create_task(poll_news())
     return {"is_polling": is_polling, "is_classifying": is_classifying}
 
+@app.options("/stop_polling")
+async def options_handler():
+    return {"status": "OK"}
+
 @app.get("/stop_polling")
 async def stop_polling():
     global is_polling
     is_polling = False
     return {"is_polling": is_polling, "is_classifying": is_classifying}
 
+@app.options("/start_classifying")
+async def options_handler():
+    return {"status": "OK"}
 #/start_classifying and /stop_classifying routes
 @app.get("/start_classifying")
 def start_classifying(background_tasks: BackgroundTasks):
@@ -78,11 +98,19 @@ def start_classifying(background_tasks: BackgroundTasks):
     return {"status": "Classification started in the background"}
         
 
+@app.options("/stop_classifying")
+async def options_handler():
+    return {"status": "OK"}
+
 @app.get("/stop_classifying")
 async def stop_classifying():
     global is_classifying
     is_classifying = False
     return {"is_polling": is_polling, "is_classifying": is_classifying}
+
+@app.options("/classified_articles")
+async def options_handler():
+    return {"status": "OK"}
 
 @app.get("/classified_articles")
 async def get_classified_articles():
@@ -103,6 +131,11 @@ async def poll_news():
     while is_polling:
         await fetch_and_store_articles(FINNHUB_API_KEY)
         await asyncio.sleep(30)  # Polling interval in seconds
+
+
+@app.options("/articles")
+async def options_handler():
+    return {"status": "OK"}
 
 @app.get("/articles")
 async def get_articles(classified: str = Query("all", regex="^(true|false|all)$")):
@@ -138,6 +171,3 @@ async def get_articles(classified: str = Query("all", regex="^(true|false|all)$"
     
     return {"articles": result}
 
-
-# Serve the React build directory
-#app.mount("/", StaticFiles(directory="frontend/build", html=True), name="frontend")
