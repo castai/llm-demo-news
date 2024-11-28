@@ -88,5 +88,10 @@ The frontend will be available at http://localhost:3000.
 
 
 
+## Create Image for K8s
 
+Run `./scripts/build_multi.sh`. The image will be `kirilomancastai/demo:$tag`. Make sure to update the `k8s/demo.yaml` file with the latest working tag.
 
+## Deploy in K8s cluster
+
+From root, run `./scripts/deploy.sh` while in the context of your cluster. It will return the URL that can be accessed. Paste it in the browser and use the APP.

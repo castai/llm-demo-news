@@ -3,12 +3,6 @@
 # Define the file where the version is stored
 VERSION_FILE="version.txt"
 
-# Check the first parameter for the image name
-if [[ -z "$1" ]]; then
-  echo "Please provide the image name as the first parameter"
-  exit 1
-fi
-
 # Check if the version file exists; if not, initialize it with version 0
 if [[ ! -f "$VERSION_FILE" ]]; then
   echo "0" > "$VERSION_FILE"
@@ -26,7 +20,7 @@ echo "$TAG_VERSION" > "$VERSION_FILE"
 # Build the multi-architecture image and push to Docker Hub
 docker buildx create --name mybuilder --use
 docker buildx inspect --bootstrap
-docker buildx build --platform linux/amd64,linux/arm64 -t lkup77/$1:$TAG_VERSION --push .
+docker buildx build --platform linux/amd64,linux/arm64 -t kirilomancastai/demo:$TAG_VERSION --push .
 
 # Output the latest version
 echo "The latest version is: $TAG_VERSION"
