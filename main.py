@@ -13,9 +13,10 @@ from config_loader import load_config
 from logger_config import get_logger
 from pydantic import BaseModel
 
-class LLMSettings(BaseModel):
+class Settings(BaseModel):
     llmUrl: str | None = None
     llmApiKey: str | None = None
+    finnhubApiKey: str | None = None
 
 
 logger = get_logger(__name__)
@@ -23,13 +24,12 @@ logger = get_logger(__name__)
 # Load configuration
 config = load_config()
 if config is None:
-    logger.error("Configuration could not be loaded. Exiting.")
-    exit(-1)
+    logger.error("Configuration could not be loaded. Using defaults.")
 
 # Access configuration values
-LLM_URL = config["llm"]["url"]
-LLM_API_KEY = config["llm"]["api_key"]
-FINNHUB_API_KEY = config["finnhub"]["api_key"]
+LLM_URL = 'https://api.openai.com/v1' if config is None else config["llm"]["url"]
+LLM_API_KEY = '' if config is None else config["llm"]["api_key"]
+FINNHUB_API_KEY = '' if config is None else config["finnhub"]["api_key"]
 
 
 app = FastAPI()
@@ -52,24 +52,28 @@ async def startup_event():
 
 # Add this new endpoint after your other routes
 @app.post("/settings")
-async def update_settings(settings: LLMSettings):
-    global LLM_URL, LLM_API_KEY
+async def update_settings(settings: Settings):
+    global LLM_URL, LLM_API_KEY, FINNHUB_API_KEY
     
     if settings.llmUrl is not None:
         LLM_URL = settings.llmUrl
     if settings.llmApiKey is not None:
         LLM_API_KEY = settings.llmApiKey
+    if settings.finnhubApiKey is not None:
+        FINNHUB_API_KEY = settings.finnhubApiKey
 
     logger.info(f"LLM_URL: {LLM_URL}")
     logger.info(f"LLM_API_KEY: {LLM_API_KEY}")
-    
+    logger.info(f"FINNHUB_API_KEY: {FINNHUB_API_KEY}")
+
     return {"message": "Settings updated successfully"}
 
 @app.get("/settings")
 async def get_settings():
     return {
         "llmUrl": LLM_URL,
-        "llmApiKey": '***' if LLM_API_KEY else None
+        "llmApiKey": '***' if LLM_API_KEY else None,
+        "finnhubApiKey": '***' if FINNHUB_API_KEY else None
     }
 
 @app.get("/reset_classifications")
@@ -168,4 +172,4 @@ async def get_articles(classified: str = Query("all", regex="^(true|false|all)$"
 
 
 # Serve the React build directory
-#app.mount("/", StaticFiles(directory="frontend/build", html=True), name="frontend")
+app.mount("/", StaticFiles(directory="frontend/build", html=True), name="frontend")

@@ -21,7 +21,12 @@ You will need access to an LLM, like open AI and a free finnhub API token, which
     - Finnhub API for news data
     - Custom LLM API for sentiment analysis
 
-### Setup
+### Run with Docker
+- Run `docker run -p 8000:8000 gcr.io/castai-hub/llm-demo-news`
+- Go to `http://localhost:8000/` in browser
+- Setup API keys on the settings screen
+
+### Development
 
 #### Prerequisites
 
@@ -86,7 +91,9 @@ The frontend will be available at http://localhost:3000.
     - Reset classifications.
 4. View the sentiment timeline and detailed news articles on the dashboard.
 
-
-
-
-
+### Build and push new image
+```
+docker build .
+docker tag <sha-from-previous-step> gcr.io/castai-hub/latest
+docker push gcr.io/castai-hub/latest
+```

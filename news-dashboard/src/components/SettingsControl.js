@@ -14,11 +14,13 @@ import SettingsIcon from "@mui/icons-material/Settings";
 const SettingsDrawer = ({ isOpen, onClose }) => {
   const [llmUrl, setLlmUrl] = useState("");
   const [llmApiKey, setLlmApiKey] = useState("");
+  const [finnhubApiKey, setFinnhubApiKey] = useState("");
 
   const saveSettings = async () => {
     await axios.post("http://localhost:8000/settings", {
       llmUrl,
       llmApiKey: llmApiKey === "***" ? undefined : llmApiKey,
+      finnhubApiKey: finnhubApiKey === "***" ? undefined : finnhubApiKey,
     });
     onClose();
   };
@@ -32,6 +34,7 @@ const SettingsDrawer = ({ isOpen, onClose }) => {
       const response = await axios.get("http://localhost:8000/settings");
       setLlmUrl(response.data.llmUrl);
       setLlmApiKey(response.data.llmApiKey);
+      setFinnhubApiKey(response.data.finnhubApiKey);
     };
     fetchSettings();
   }, [isOpen]);
@@ -60,6 +63,12 @@ const SettingsDrawer = ({ isOpen, onClose }) => {
             label="LLM API Key"
             value={llmApiKey}
             onChange={(e) => setLlmApiKey(e.target.value)}
+            size="small"
+          />
+            <TextField
+            label="FinnHub API Key"
+            value={finnhubApiKey}
+            onChange={(e) => setFinnhubApiKey(e.target.value)}
             size="small"
           />
           <Button variant="contained" color="primary" onClick={saveSettings}>
