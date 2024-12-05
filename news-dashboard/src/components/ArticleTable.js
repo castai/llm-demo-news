@@ -48,6 +48,7 @@ const ArticleTable = () => {
                         <TableCell>Title</TableCell>
                         <TableCell>Sentiment</TableCell>
                         <TableCell>Industry Category</TableCell>
+                        <TableCell>Classification model</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -56,8 +57,9 @@ const ArticleTable = () => {
                             <TableCell>{article.id}</TableCell>
                             <TableCell>{article.date}</TableCell>
                             <TableCell>{article.title}</TableCell>
-                            <TableCell>{article.sentiment || '-'}</TableCell>
+                            <TableCell>{article.sentiment != null ? article.sentiment : '-'}</TableCell>
                             <TableCell>{article.industry_category || '-'}</TableCell>
+                            <TableCell>{article.classification_model || '-'}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>

@@ -36,7 +36,8 @@ def init_db():
             is_classified INTEGER DEFAULT 0,
             classification TEXT,
             market_sentiment REAL DEFAULT 0,       -- Calculated sentiment score from -5 to 5
-            industry_category TEXT                 -- Calculated industry category (GICS)
+            industry_category TEXT,                 -- Calculated industry category (GICS)
+            classification_model TEXT               -- Model used for classification
         )''')
 
 def reset_classifications():
@@ -45,7 +46,8 @@ def reset_classifications():
                         SET is_classified = 0,
                             classification = NULL,
                             market_sentiment = 0,
-                            industry_category = NULL''')
+                            industry_category = NULL,
+                            classification_model = NULL''')
         conn.commit()
         logger.info("Reset classifications for all articles.")
 
