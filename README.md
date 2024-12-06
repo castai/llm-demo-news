@@ -26,6 +26,12 @@ You will need access to an LLM, like open AI and a free finnhub API token, which
 - Go to `http://localhost:8000/` in browser
 - Setup API keys on the settings screen
 
+### Deploy to k8s
+- Run the curl command to deploy the app to a k8s cluster and port-forward to the service
+```shell
+curl -sSL https://raw.githubusercontent.com/castai/llm-demo-news/main/scripts/install-k8s.sh | bash
+````
+
 ### Development
 
 #### Prerequisites
