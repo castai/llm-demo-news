@@ -2,7 +2,7 @@
 
 set -e
 
-REPO_URL="https://raw.githubusercontent.com/castai/llm-demo-news/LLM-249_simplify_app_k8s_setup"
+REPO_URL="https://raw.githubusercontent.com/castai/llm-demo-news/main"
 
 echo "Applying the Kubernetes deployment..."
 curl -sSL "$REPO_URL/k8s/deploy.yaml" | kubectl apply -f -
