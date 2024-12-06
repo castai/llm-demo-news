@@ -12,7 +12,8 @@ def load_config(file_path="config.yaml"):
         # Define required keys for validation
         required_sections = {
             "llm": ["api_key", "url"],
-            "finnhub": ["api_key"]
+            "finnhub": ["api_key"],
+            "router": ["quality_weight"]
         }
 
         # Validate the configuration

@@ -13,10 +13,12 @@ from config_loader import load_config
 from logger_config import get_logger
 from pydantic import BaseModel
 
+
 class Settings(BaseModel):
     llmUrl: str | None = None
     llmApiKey: str | None = None
     finnhubApiKey: str | None = None
+    routerQualityWeight: float | None = None
 
 
 logger = get_logger(__name__)
@@ -30,6 +32,7 @@ if config is None:
 LLM_URL = 'https://api.openai.com/v1' if config is None else config["llm"]["url"]
 LLM_API_KEY = '' if config is None else config["llm"]["api_key"]
 FINNHUB_API_KEY = '' if config is None else config["finnhub"]["api_key"]
+ROUTER_QUALITY_WEIGHT = 0 if config is None else config["router"]["quality_weight"]
 
 
 app = FastAPI()
@@ -53,7 +56,7 @@ async def startup_event():
 # Add this new endpoint after your other routes
 @app.post("/settings")
 async def update_settings(settings: Settings):
-    global LLM_URL, LLM_API_KEY, FINNHUB_API_KEY
+    global LLM_URL, LLM_API_KEY, FINNHUB_API_KEY, ROUTER_QUALITY_WEIGHT
     
     if settings.llmUrl is not None:
         LLM_URL = settings.llmUrl
@@ -61,10 +64,13 @@ async def update_settings(settings: Settings):
         LLM_API_KEY = settings.llmApiKey
     if settings.finnhubApiKey is not None:
         FINNHUB_API_KEY = settings.finnhubApiKey
+    if settings.routerQualityWeight is not None:
+        ROUTER_QUALITY_WEIGHT = settings.routerQualityWeight
 
     logger.info(f"LLM_URL: {LLM_URL}")
     logger.info(f"LLM_API_KEY: {LLM_API_KEY}")
     logger.info(f"FINNHUB_API_KEY: {FINNHUB_API_KEY}")
+    logger.info(f"ROUTER_QUALITY_WEIGHT: {ROUTER_QUALITY_WEIGHT}")
 
     return {"message": "Settings updated successfully"}
 
@@ -73,7 +79,8 @@ async def get_settings():
     return {
         "llmUrl": LLM_URL,
         "llmApiKey": '***' if LLM_API_KEY else None,
-        "finnhubApiKey": '***' if FINNHUB_API_KEY else None
+        "finnhubApiKey": '***' if FINNHUB_API_KEY else None,
+        "routerQualityWeight": ROUTER_QUALITY_WEIGHT,
     }
 
 @app.get("/reset_classifications")
@@ -128,7 +135,7 @@ async def get_classified_articles():
 def classify_articles_start():
     global is_classifying
     while is_classifying:
-        classify_articles(n=100, llm_url=LLM_URL, llm_api_key=LLM_API_KEY)
+        classify_articles(n=100, llm_url=LLM_URL, llm_api_key=LLM_API_KEY, router_quality_weight=ROUTER_QUALITY_WEIGHT)
         time.sleep(30)
 
 async def poll_news():
@@ -143,7 +150,7 @@ async def get_articles(classified: str = Query("all", regex="^(true|false|all)$"
     Returns ID, formatted date, title, sentiment, and industry category.
     Order by date in descending order.
     """
-    query = "SELECT id, finnhub_id, datetime, headline, market_sentiment, industry_category, is_classified FROM articles"
+    query = "SELECT id, finnhub_id, datetime, headline, market_sentiment, industry_category, classification_model, is_classified FROM articles"
     
     if classified == "true":
         query += " WHERE is_classified = 1"
@@ -166,6 +173,7 @@ async def get_articles(classified: str = Query("all", regex="^(true|false|all)$"
                 "title": article["headline"],
                 "sentiment": article["market_sentiment"] if article["is_classified"] else None,
                 "industry_category": article["industry_category"] if article["is_classified"] else None,
+                "classification_model": article["classification_model"] if article["is_classified"] else None,
             })
     
     return {"articles": result}

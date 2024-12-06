@@ -22,9 +22,15 @@ You will need access to an LLM, like open AI and a free finnhub API token, which
     - Custom LLM API for sentiment analysis
 
 ### Run with Docker
-- Run `docker run -p 8000:8000 gcr.io/castai-hub/llm-demo-news`
+- Run `docker run -p 8000:8000 us-docker.pkg.dev/castai-hub/library/llm-demo-news:latest`
 - Go to `http://localhost:8000/` in browser
 - Setup API keys on the settings screen
+
+### Deploy to k8s
+- Run the curl command to deploy the app to a k8s cluster and port-forward to the service
+```shell
+curl -sSL https://raw.githubusercontent.com/castai/llm-demo-news/main/scripts/install-k8s.sh | bash
+````
 
 ### Development
 
@@ -93,7 +99,5 @@ The frontend will be available at http://localhost:3000.
 
 ### Build and push new image
 ```
-docker build .
-docker tag <sha-from-previous-step> gcr.io/castai-hub/latest
-docker push gcr.io/castai-hub/latest
+docker buildx build --platform linux/amd64,linux/arm64 --tag us-docker.pkg.dev/castai-hub/library/llm-demo-news:latest --push .
 ```
