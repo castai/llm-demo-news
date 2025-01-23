@@ -49,6 +49,7 @@ const ArticleTable = () => {
                         <TableCell>Sentiment</TableCell>
                         <TableCell>Industry Category</TableCell>
                         <TableCell>Classification model</TableCell>
+                        <TableCell>LLM Provider</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -60,6 +61,13 @@ const ArticleTable = () => {
                             <TableCell>{article.sentiment != null ? article.sentiment : '-'}</TableCell>
                             <TableCell>{article.industry_category || '-'}</TableCell>
                             <TableCell>{article.classification_model || '-'}</TableCell>
+                            <TableCell>
+                            {article.provider
+                                ? `${article.provider} - ${article.provider === 'Ollama' ? 'managed by Cast AI' : 'registered'})`
+                                : article.classification_model
+                                ? 'Openai - unregistered'
+                                : '-'}
+                            </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>

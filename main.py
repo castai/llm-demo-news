@@ -150,7 +150,7 @@ async def get_articles(classified: str = Query("all", regex="^(true|false|all)$"
     Returns ID, formatted date, title, sentiment, and industry category.
     Order by date in descending order.
     """
-    query = "SELECT id, finnhub_id, datetime, headline, market_sentiment, industry_category, classification_model, is_classified FROM articles"
+    query = "SELECT id, finnhub_id, datetime, headline, market_sentiment, industry_category, classification_model, provider, is_classified FROM articles"
     
     if classified == "true":
         query += " WHERE is_classified = 1"
@@ -174,6 +174,7 @@ async def get_articles(classified: str = Query("all", regex="^(true|false|all)$"
                 "sentiment": article["market_sentiment"] if article["is_classified"] else None,
                 "industry_category": article["industry_category"] if article["is_classified"] else None,
                 "classification_model": article["classification_model"] if article["is_classified"] else None,
+                "provider": article["provider"] if article["is_classified"] else None,
             })
     
     return {"articles": result}

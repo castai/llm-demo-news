@@ -21,6 +21,8 @@ def get_last_id():
         return last_id
     
 def init_db():
+    logger.info("Initializing DB...")
+
     with get_db_connection() as conn:
         conn.execute('''CREATE TABLE IF NOT EXISTS articles (
             id INTEGER PRIMARY KEY,
@@ -35,10 +37,14 @@ def init_db():
             url TEXT,
             is_classified INTEGER DEFAULT 0,
             classification TEXT,
-            market_sentiment REAL DEFAULT 0,       -- Calculated sentiment score from -5 to 5
-            industry_category TEXT,                 -- Calculated industry category (GICS)
-            classification_model TEXT               -- Model used for classification
+            market_sentiment REAL DEFAULT 0,            -- Calculated sentiment score from -5 to 5
+            industry_category TEXT,                     -- Calculated industry category (GICS)
+            classification_model TEXT,                  -- Model used for classification
+            provider TEXT                               -- Provider used for classification
         )''')
+
+    logger.info("DB initialization completed.")
+
 
 def reset_classifications():
     with get_db_connection() as conn:

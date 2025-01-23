@@ -60,9 +60,9 @@ def classify_articles(n=1, llm_url=None, llm_api_key=None, router_quality_weight
                 return
 
             try:
-                sentiment_score, company_category, model = classify_article(article, client, router_quality_weight)
+                sentiment_score, company_category, model, provider = classify_article(article, client, router_quality_weight)
 
-                update_article_classification(conn, article['id'], sentiment_score, company_category, model)
+                update_article_classification(conn, article['id'], sentiment_score, company_category, model, provider)
 
                 # Small delay to avoid rate-limiting
                 #time.sleep(0.5)
@@ -71,16 +71,17 @@ def classify_articles(n=1, llm_url=None, llm_api_key=None, router_quality_weight
                 logger.error(f"Error classifying article {article['id']}: {e}")
 
 
-def update_article_classification(conn, article_id, sentiment_score, company_category, model):
+def update_article_classification(conn, article_id, sentiment_score, company_category, model, provider):
     try:
         conn.execute(
             '''UPDATE articles
                 SET is_classified = 1,
                     market_sentiment = ?,
                     industry_category = ?,
-                    classification_model = ?
+                    classification_model = ?,
+                    provider = ?
                 WHERE id = ?''',
-            (sentiment_score, company_category, model, article_id)
+            (sentiment_score, company_category, model, provider, article_id)
         )
         conn.commit()
         logger.info(f"Article {article_id} classified successfully.")
@@ -92,7 +93,7 @@ def classify_article(article, client, router_quality_weight=None):
     prompt = format_prompt(article)
     article_id = article['id']
 
-    chat_completion = client.chat.completions.create(
+    raw_response = client.chat.completions.with_raw_response.create(
         messages=[
             {
                 'role': 'user',
@@ -104,6 +105,7 @@ def classify_article(article, client, router_quality_weight=None):
     )
 
     # Parse the response assuming it’s in JSON format
+    chat_completion = raw_response.parse()
 
     # Access the completion content
     completion_content = chat_completion.choices[0].message.content
@@ -116,7 +118,7 @@ def classify_article(article, client, router_quality_weight=None):
     sentiment_score = classification.get("sentiment_score", 0)
     company_category = classification.get("company_category", "None")
 
-    return sentiment_score, company_category, chat_completion.model
+    return sentiment_score, company_category, chat_completion.model, raw_response.headers.get('X-Provider', '').capitalize()
 
 # Main function to test classification
 if __name__ == '__main__':

@@ -66,6 +66,9 @@ llm:
 
 finnhub:
   api_key: "your-finnhub-api-key"
+
+router:
+  quality_weight: 0.5
 ```
 5. Run the Server
 ```shell
