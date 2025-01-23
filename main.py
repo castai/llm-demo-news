@@ -174,6 +174,7 @@ async def get_articles(classified: str = Query("all", regex="^(true|false|all)$"
                 "sentiment": article["market_sentiment"] if article["is_classified"] else None,
                 "industry_category": article["industry_category"] if article["is_classified"] else None,
                 "classification_model": article["classification_model"] if article["is_classified"] else None,
+                "provider": article["provider"] if article["is_classified"] else None,
             })
     
     return {"articles": result}
