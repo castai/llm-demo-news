@@ -63,7 +63,7 @@ const ArticleTable = () => {
                             <TableCell>{article.classification_model || '-'}</TableCell>
                             <TableCell>
                             {article.provider
-                                ? `${article.provider} - ${article.provider === 'Ollama' ? 'managed by CAST AI' : 'registered'})`
+                                ? `${article.provider} - ${article.provider === 'Ollama' ? 'managed by Cast AI' : 'registered'})`
                                 : article.classification_model
                                 ? 'Openai - unregistered'
                                 : '-'}
