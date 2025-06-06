@@ -12,6 +12,8 @@ from classify import classify_articles
 from config_loader import load_config
 from logger_config import get_logger
 from pydantic import BaseModel
+from kubernetes import client, config
+import subprocess
 
 
 class Settings(BaseModel):
@@ -182,3 +184,81 @@ async def get_articles(classified: str = Query("all", regex="^(true|false|all)$"
 
 # Serve the React build directory
 app.mount("/", StaticFiles(directory="frontend/build", html=True), name="frontend")
+
+# Initialize Kubernetes client
+try:
+    config.load_incluster_config()
+except config.ConfigException:
+    config.load_kube_config()
+
+v1 = client.CoreV1Api()
+
+def get_pod_count():
+    try:
+        # Get pods in the default namespace with the label app=vllm
+        pods = v1.list_namespaced_pod(
+            namespace="default",
+            label_selector="app=vllm"
+        )
+        return len(pods.items)
+    except Exception as e:
+        logger.error(f"Error getting pod count: {e}")
+        return 0
+
+def record_scaling_event(event_type):
+    with get_db_connection() as conn:
+        conn.execute(
+            "INSERT INTO model_scaling_history (timestamp, pod_count, event_type) VALUES (?, ?, ?)",
+            (int(time.time()), get_pod_count(), event_type)
+        )
+        conn.commit()
+
+@app.get("/model/pods")
+async def get_model_pods():
+    current_pods = get_pod_count()
+    
+    with get_db_connection() as conn:
+        history = conn.execute(
+            "SELECT timestamp, pod_count, event_type FROM model_scaling_history ORDER BY timestamp DESC LIMIT 100"
+        ).fetchall()
+    
+    return {
+        "current_pods": current_pods,
+        "history": [dict(h) for h in history]
+    }
+
+@app.post("/model/load-test/start")
+async def start_load_test():
+    try:
+        # Start Locust in the background
+        subprocess.Popen([
+            "kubectl", "port-forward", "svc/locust-master", "8089:8089", "-n", "default"
+        ])
+        
+        # Start Locust workers
+        subprocess.run([
+            "kubectl", "scale", "deployment", "locust-worker", "--replicas=5", "-n", "default"
+        ])
+        
+        record_scaling_event("load_test_start")
+        return {"status": "Load test started"}
+    except Exception as e:
+        logger.error(f"Error starting load test: {e}")
+        return {"status": "error", "message": str(e)}
+
+@app.post("/model/load-test/stop")
+async def stop_load_test():
+    try:
+        # Stop Locust workers
+        subprocess.run([
+            "kubectl", "scale", "deployment", "locust-worker", "--replicas=0", "-n", "default"
+        ])
+        
+        # Kill port-forward process
+        subprocess.run(["pkill", "-f", "kubectl port-forward"])
+        
+        record_scaling_event("load_test_stop")
+        return {"status": "Load test stopped"}
+    except Exception as e:
+        logger.error(f"Error stopping load test: {e}")
+        return {"status": "error", "message": str(e)}

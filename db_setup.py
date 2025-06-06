@@ -43,6 +43,13 @@ def init_db():
             provider TEXT                               -- Provider used for classification
         )''')
 
+        conn.execute('''CREATE TABLE IF NOT EXISTS model_scaling_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp INTEGER NOT NULL,                 -- Unix timestamp
+            pod_count INTEGER NOT NULL,                 -- Number of pods at this timestamp
+            event_type TEXT NOT NULL                    -- Type of event (scale_up, scale_down, load_test_start, load_test_stop)
+        )''')
+
     logger.info("DB initialization completed.")
 
 

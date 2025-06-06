@@ -20,3 +20,5 @@ httpx
 
 #finnhub
 finnhub-python
+
+kubernetes==28.1.0
